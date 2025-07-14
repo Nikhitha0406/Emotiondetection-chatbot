@@ -1,10 +1,7 @@
 Flask
-transformers
-torch
-httpx
-librosa
-SpeechRecognition
-Flask-Session
-Flask-SQLAlchemy
+flask_sqlalchemy
+requests
 python-dotenv
+werkzeug
+
 
