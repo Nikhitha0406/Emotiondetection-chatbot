@@ -5,4 +5,5 @@ python-dotenv
 werkzeug
 transformers
 torch
+gunicorn
 
