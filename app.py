@@ -1,13 +1,12 @@
-# ✅ app.py — Emotion Chatbot with Email Login Only (OpenRouter-Ready)
+# ✅ app.py — Emotion Chatbot with Email Login Only (Render & OpenRouter-Ready)
 from flask import Flask, request, render_template, session, redirect, url_for, jsonify, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from ai_generator import generate_response
 from translator import translate_to_english, detect_language, translate
-  # ✅ Only one import
 import os
 
-# Fallbacks if emotion detection modules are missing
+# Fallbacks if emotion detection module is missing
 try:
     from emotion_detector import detect_emotion
 except ImportError:
@@ -26,7 +25,8 @@ db = SQLAlchemy(app)
 # Ensure chat log directory exists
 os.makedirs("chat_logs", exist_ok=True)
 
-# DB Models
+# --------------------------
+# Models
 class ChatLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100))
@@ -40,7 +40,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
 
 # --------------------------
-# Login and Signup Routes
+# Routes
 @app.route("/home")
 def home():
     return render_template("home.html")
@@ -74,18 +74,15 @@ def signup():
         email = request.form.get("email")
         password = request.form.get("password")
 
-        # Check if user already exists
         if User.query.filter_by(email=email).first():
             flash("Account already exists.", "warning")
             return redirect(url_for("signup"))
 
-        # Create new user
         hashed = generate_password_hash(password)
         new_user = User(email=email, password_hash=hashed)
         db.session.add(new_user)
         db.session.commit()
 
-        # ✅ Auto-login after signup
         session["username"] = email.split("@")[0].capitalize()
         session["history"] = []
         return redirect(url_for("chat_page"))
@@ -98,12 +95,12 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for("login"))
 
-# --------------------------
 @app.route("/chat_page")
 def chat_page():
     if "username" not in session:
         return redirect(url_for("login"))
     return render_template("index.html", username=session['username'], history=session['history'])
+
 @app.route("/chat", methods=["POST"])
 def chat():
     if "username" not in session:
@@ -114,23 +111,21 @@ def chat():
     if not user_input:
         return jsonify({"response": "❗ Please enter a message."})
 
-    # 🌍 Detect original language
+    # 🌍 Detect language and translate to English
     original_lang = detect_language(user_input)
-
-    # 🌐 Translate input to English
     translated_input = translate_to_english(user_input)
 
-    # 🔍 Detect emotion
+    # 🔍 Emotion Detection
     emotion_scores = detect_emotion(translated_input)
-    primary_emotion, score = emotion_scores[0] if emotion_scores else ("neutral", 1.0)
+    primary_emotion, _ = emotion_scores[0] if emotion_scores else ("neutral", 1.0)
 
-    # 💬 Generate English bot response
+    # 🤖 Generate response
     english_response = generate_response(primary_emotion, translated_input)
 
-    # 🔁 Translate response back to original language if needed
+    # 🌐 Translate back to original language if needed
     final_response = translate(english_response, target=original_lang) if original_lang != "en" else english_response
 
-    # 🧠 Save chat to session and DB
+    # 💾 Save to session and DB
     session["history"].append({
         "user": user_input,
         "bot": final_response,
@@ -151,8 +146,10 @@ def chat():
         "emotions": emotion_scores,
         "response": final_response
     })
+
+# --------------------------
+# Run App
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
