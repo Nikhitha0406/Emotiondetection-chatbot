@@ -1,22 +1,21 @@
+# emotion_detector.py
 import requests
 import os
+from dotenv import load_dotenv
 
-# Load Hugging Face API key from environment variable
-HF_API_KEY = os.getenv("HF_API_KEY")
+load_dotenv()
+HF_API_KEY = os.getenv("HF_API_KEY")  # Ensure .env has: HF_API_KEY=your_token_here
 
 def detect_emotion(text):
     API_URL = "https://api-inference.huggingface.co/models/j-hartmann/emotion-english-distilroberta-base"
     headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+    payload = {"inputs": text}
 
     try:
-        response = requests.post(API_URL, headers=headers, json={"inputs": text})
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=10)
         response.raise_for_status()
-        results = response.json()[0]  # List of emotion scores
-
-        # Sort emotions by score (descending) and return top 2
-        sorted_results = sorted(results, key=lambda x: x['score'], reverse=True)
-        return [(item["label"].lower(), round(item["score"], 4)) for item in sorted_results[:2]]
-
+        predictions = response.json()[0]
+        return [(item['label'].lower(), round(item['score'], 4)) for item in predictions]
     except Exception as e:
-        print(f"Emotion detection API error: {e}")
+        print("HF API error:", e)
         return [("neutral", 1.0)]
