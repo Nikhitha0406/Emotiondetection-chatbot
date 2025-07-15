@@ -3,4 +3,4 @@ Flask-SQLAlchemy
 Werkzeug
 gunicorn
 httpx
-
+python-dotenv
