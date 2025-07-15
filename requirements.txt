@@ -1,10 +1,6 @@
 Flask
-flask_sqlalchemy
-requests
-python-dotenv
-werkzeug
-transformers
-torch
+Flask-SQLAlchemy
+Werkzeug
 gunicorn
 httpx
 
