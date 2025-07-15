@@ -6,4 +6,5 @@ werkzeug
 transformers
 torch
 gunicorn
+httpx
 
