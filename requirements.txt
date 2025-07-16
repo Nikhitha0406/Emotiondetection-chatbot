@@ -1,6 +1,5 @@
-Flask
-Flask-SQLAlchemy
-Werkzeug
-gunicorn
-httpx
+streamlit
 python-dotenv
+httpx
+torch
+transformers
